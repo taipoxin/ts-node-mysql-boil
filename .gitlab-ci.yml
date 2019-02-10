@@ -6,17 +6,12 @@ cache:
 
 stages:
   - test
-  - build
   
   
 before_script:
   - npm install
+  - npm build
 
-
-build_ts:
-  stage: build
-  script:
-    - npm build
 
 
 tests:
@@ -27,7 +22,7 @@ tests:
 prod_tests:
   stage: test
   script:
-   - npm build && npm run test-compiled   
+   - npm run test-compiled   
 
 
 #lint:
