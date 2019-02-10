@@ -1,7 +1,8 @@
 'use strict';
 
-import db from './mysql';
+import MysqlProvider from './mysql';
+const mysqlProvider = new MysqlProvider();
 
 export default {
-  db,
+  mysqlProvider,
 };

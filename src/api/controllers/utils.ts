@@ -3,11 +3,9 @@
 import makeDebug from 'debug';
 
 
-import dbProvider from '../db';
 import queries from './queries';
 
 const debug = makeDebug('app:controller:utils');
-const { db } = dbProvider;
 
 function validateRequest(object) {
   if (!object.count_number
@@ -23,7 +21,7 @@ function validateRequest(object) {
 }
 
 // tslint:disable
-async function updateTransaction(object) {
+async function updateTransaction(mysqlProvider, object) {
   const ifLessonExists = `SELECT id FROM lessons where
     group_ = (SELECT id FROM groups where name = '${object.group_}')
     and day_of_week = ${object.day_of_week}
@@ -36,9 +34,9 @@ async function updateTransaction(object) {
   
 
   try {
-    await db.connection.beginTransaction();
+    await mysqlProvider.connection.beginTransaction();
 
-    const lessonExists:any = await db.doQuery(ifLessonExists);
+    const lessonExists:any = await mysqlProvider.doQuery(ifLessonExists);
     
     if (lessonExists.length === 0) {
       throw new Error('lesson does not exists');
@@ -50,22 +48,22 @@ async function updateTransaction(object) {
     }
 
     debug(ifSubjectExists);
-    let result:any = await db.doQuery(ifSubjectExists);
+    let result:any = await mysqlProvider.doQuery(ifSubjectExists);
 
     debug(result);
     if (result.length === 0) {
       debug(insertSubject);
-      result = await db.doQuery(insertSubject);
+      result = await mysqlProvider.doQuery(insertSubject);
       debug(result, console.trace());
     }
 
     debug(ifTeacherExists);
-    result = await db.doQuery(ifTeacherExists);
+    result = await mysqlProvider.doQuery(ifTeacherExists);
 
     debug(result);
     if (result.length === 0) {
       debug(insertTeacher);
-      result = await db.doQuery(insertTeacher);
+      result = await mysqlProvider.doQuery(insertTeacher);
       debug(result, console.trace());
     }
 
@@ -75,20 +73,20 @@ async function updateTransaction(object) {
     debug(lessonId);
     const sqlUpdateLesson = queries.genUpdateQuery(lessonId, object);
     debug(sqlUpdateLesson);
-    result = await db.doQuery(sqlUpdateLesson);
+    result = await mysqlProvider.doQuery(sqlUpdateLesson);
     debug(result, console.trace());
 
-    await db.connection.commit();
+    await mysqlProvider.connection.commit();
     debug('transaction complete');
   } catch (err) {
     debug(err);
-    db.connection.rollback();
+    mysqlProvider.connection.rollback();
     throw new Error('error on transaction');
   }
 }
 
 
-async function insertTransaction(object) {
+async function insertTransaction(mysqlProvider, object) {
   const ifSubjectExists = `SELECT id from subjects where name = '${object.subject_}'`;
   const insertSubject = `insert into subjects (name) values ('${object.subject_}')`;
   const ifTeacherExists = `SELECT id from teachers where name = '${object.teacher}'`;
@@ -100,43 +98,43 @@ async function insertTransaction(object) {
     and count_number = ${object.count_number}`;
 
   try {
-    await db.connection.beginTransaction();
+    await mysqlProvider.connection.beginTransaction();
 
     debug(ifSubjectExists);
 
-    let result:any = await db.doQuery(ifSubjectExists);
+    let result:any = await mysqlProvider.doQuery(ifSubjectExists);
 
     debug(result);
     if (result.length === 0) {
       debug(insertSubject);
-      result = await db.doQuery(insertSubject);
+      result = await mysqlProvider.doQuery(insertSubject);
       debug(result, console.trace());
     }
 
     debug(ifTeacherExists);
-    result = await db.doQuery(ifTeacherExists);
+    result = await mysqlProvider.doQuery(ifTeacherExists);
 
     debug(result);
     if (result.length === 0) {
       debug(insertTeacher);
-      result = await db.doQuery(insertTeacher);
+      result = await mysqlProvider.doQuery(insertTeacher);
       debug(result, console.trace());
     }
 
-    const lessonExists:any = await db.doQuery(ifLessonExists);
+    const lessonExists:any = await mysqlProvider.doQuery(ifLessonExists);
     if (lessonExists.length !== 0) {
       throw new Error('lesson already exists');
     }
 
     const sqlInsertLesson = queries.genInsertQuery(object);
-    result = await db.doQuery(sqlInsertLesson);
+    result = await mysqlProvider.doQuery(sqlInsertLesson);
     debug(result, console.trace());
 
-    await db.connection.commit();
+    await mysqlProvider.connection.commit();
     debug('transaction complete');
   } catch (err) {
     debug(err);
-    db.connection.rollback();
+    mysqlProvider.connection.rollback();
     throw new Error('error on transaction');
   }
 }

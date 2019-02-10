@@ -4,11 +4,16 @@ import makeDebug from 'debug';
 
 const debug = makeDebug('app:controller');
 
-import dbProvider from '../db/';
+import db from '../db/';
 import utils from './utils';
 import queries from './queries';
 import ServerCodes from './server-codes';
-const { db } = dbProvider;
+const { mysqlProvider } = db;
+
+if (!process.env.TEST) {
+  mysqlProvider.startConnection();
+}
+
 
 /**
  * @route GET /get/all
@@ -24,12 +29,12 @@ const getAll = async (req, res) => {
     let result;
     if (req.query.day) {
       if (req.query.day && Number.isInteger(+req.query.day)) {
-        result = await db.doQuery(`${sqlQuery} WHERE day_of_week = ${req.query.day}`);
+        result = await mysqlProvider.doQuery(`${sqlQuery} WHERE day_of_week = ${req.query.day}`);
       } else {
         throw new Error('bad request');
       }
     } else {
-      result = await db.doQuery(sqlQuery);
+      result = await mysqlProvider.doQuery(sqlQuery);
     }
     // debug('result: ', result);
     res.send(result);
@@ -60,11 +65,11 @@ const postLesson = async (req, res) => {
     let result;
     if (toUpdate === 'true') {
       // check and update only, not insert
-      await utils.updateTransaction(obj);
+      await utils.updateTransaction(mysqlProvider, obj);
       result = 'OK';
     } else if (toUpdate === 'false') {
       // insert only
-      await utils.insertTransaction(obj);
+      await utils.insertTransaction(mysqlProvider, obj);
       result = 'OK';
     }
 
@@ -108,7 +113,7 @@ const execQuery = async (req, res) => {
     if (!query) {
       throw new Error('bad request, not all body params provided');
     }
-    const result = await db.doQuery(query);
+    const result = await mysqlProvider.doQuery(query);
     debug('result: ', result);
     res.send(result);
   } catch (err) {
