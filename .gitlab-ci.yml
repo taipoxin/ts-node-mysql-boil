@@ -12,20 +12,22 @@ stages:
 before_script:
   - npm install
 
+
 build_ts:
   stage: build
   script:
     - npm build
 
 
-variables:
-  TEST: true
-  
-
-run_tests:
+tests:
   stage: test
   script:
-   - npm run test-compiled
+   - npm run test
+   
+prod_tests:
+  stage: test
+  script:
+   - npm build && npm run test-compiled   
 
 
 #lint:
