@@ -10,18 +10,17 @@ stages:
   
 before_script:
   - npm install
-  - npm build
-
-
+  
 
 tests:
   stage: test
   script:
    - npm run test
    
-prod_tests:
+build_and_tests:
   stage: test
   script:
+   - npm run build
    - npm run test-compiled   
 
 
