@@ -1,0 +1,9 @@
+{
+  "extends": [
+    "tslint-config-security",
+    "tslint-config-airbnb-base"
+  ],
+  "rules": {
+      "class-name": true
+  }
+}
